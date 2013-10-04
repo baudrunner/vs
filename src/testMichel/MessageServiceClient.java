@@ -12,13 +12,22 @@ public class MessageServiceClient {
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient() throws RemoteException, NotBoundException{
 		Registry registry = LocateRegistry.getRegistry("WOOD");
-		msgService = (MessageService)registry.lookup("MessageServiceMichel");
+		msgService = (MessageService)registry.lookup("MessageService");
 	}
 
-	//Gibt das Datum des gerufenen Servers auf der Konsole aus.
 	public void printServerMessage() throws RemoteException{
-		String msg = msgService.nextMessage("Client1oderso");
-		System.out.println("Message from Server:" + msg);
+
+		//sendet 4 Nachrichten an den Server
+		for(int i = 0; i < 4; i++){
+			msgService.newMessage("Client1", "voll tolle Nachricht " + i);
+		}
+		
+		//holt drei nachrichten vom Server
+		for(int i = 0; i < 3; i++){
+			String msg = msgService.nextMessage("Client1");
+			System.out.println("Message from Server:" + msg);
+		}
+		
 	}
 	
 	public static void main(String[] args) {
