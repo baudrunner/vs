@@ -11,7 +11,7 @@ public class DatumClient {
 
 	//sucht in der RMI Registry nach der "datum"-Instanz
 	public DatumClient() throws RemoteException, NotBoundException{
-		Registry registry = LocateRegistry.getRegistry("localhost");
+		Registry registry = LocateRegistry.getRegistry("WOOD");
 		datum = (Datum)registry.lookup("datum");
 	}
 
