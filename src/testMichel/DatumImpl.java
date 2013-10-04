@@ -3,8 +3,8 @@ package testMichel;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
+//import java.rmi.server.RMIClientSocketFactory;
+//import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 
@@ -30,7 +30,7 @@ public class DatumImpl extends UnicastRemoteObject implements Datum {
 		try{
 			Datum datum = new DatumImpl();
 			//Registrieren des DAtum-Objektes
-			//LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
+			LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
 			Registry registry = LocateRegistry.getRegistry();
 			registry.rebind("datum", datum);
 			System.out.println("Server initialisiert! :D yay!");
