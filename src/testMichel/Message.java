@@ -21,5 +21,9 @@ public class Message {
 	public String getFormatedDeliveryMessage(){
 		return msgID + " " + clientID + ":" + message + " " + arrivalTime;
 	}
+	
+	public int getMessageId(){
+		return msgID;
+	}
 
 }
