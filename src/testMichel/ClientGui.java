@@ -25,6 +25,8 @@ import java.rmi.RemoteException;
 import java.util.Date;
 
 import javax.swing.JTextArea;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class ClientGui {
 
@@ -82,12 +84,23 @@ public class ClientGui {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 560, 350);
+		frame.setBounds(100, 100, 737, 461);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 
 		sendMessageField = new JTextField();
-		sendMessageField.setBounds(12, 293, 451, 19);
+		sendMessageField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+				if(e.getKeyChar() == '\n'){
+					msgClient.sendMessage(sendMessageField.getText());
+					sendMessageField.setText(null);
+				}
+				
+			}
+		});
+		sendMessageField.setBounds(129, 252, 461, 19);
 		frame.getContentPane().add(sendMessageField);
 		sendMessageField.setColumns(50);
 		
@@ -101,15 +114,15 @@ public class ClientGui {
 				msgClient.sendMessage(sendMessageField.getText());
 			}
 		});
-		btnSend.setBounds(475, 291, 69, 22);
+		btnSend.setBounds(609, 250, 69, 22);
 		frame.getContentPane().add(btnSend);
 
 		JLabel lblClient = new JLabel("Client");
-		lblClient.setBounds(256, 12, 70, 15);
+		lblClient.setBounds(346, 12, 70, 15);
 		frame.getContentPane().add(lblClient);
 
 		JLabel lblMessages = new JLabel("Messages:");
-		lblMessages.setBounds(12, 171, 81, 15);
+		lblMessages.setBounds(30, 254, 81, 15);
 		frame.getContentPane().add(lblMessages);
 
 		JButton btnGetmessage = new JButton("getNextMessage");
@@ -118,7 +131,7 @@ public class ClientGui {
 				setText(msgClient.getMessage());
 			}
 		});
-		btnGetmessage.setBounds(390, 137, 154, 22);
+		btnGetmessage.setBounds(524, 299, 154, 22);
 		frame.getContentPane().add(btnGetmessage);
 
 		final JCheckBox chckbxNewCheckBox = new JCheckBox("getAllMessages");
@@ -137,14 +150,14 @@ public class ClientGui {
 
 			}
 		});
-		chckbxNewCheckBox.setBounds(390, 167, 141, 23);
+		chckbxNewCheckBox.setBounds(524, 329, 141, 23);
 		frame.getContentPane().add(chckbxNewCheckBox);
 		
 	
 		txtrScrolltext.setEditable(false);
 		txtrScrolltext.setBounds(30, 52, 200, 83);
 		JScrollPane scrollPane = new JScrollPane (txtrScrolltext, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		scrollPane.setBounds(30, 52, 348, 107);
+		scrollPane.setBounds(30, 52, 648, 175);
 		frame.getContentPane().add(scrollPane);
 		
 		

@@ -12,7 +12,7 @@ public class MessageServiceClient {
 
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient() throws RemoteException, NotBoundException{
-		Registry registry = LocateRegistry.getRegistry("192.168.0.5");
+		Registry registry = LocateRegistry.getRegistry("141.22.87.238");
 		msgService = (MessageService)registry.lookup("MessageService");
 		
 		
