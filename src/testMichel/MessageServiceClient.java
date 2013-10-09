@@ -8,40 +8,47 @@ import java.util.Date;
 
 public class MessageServiceClient {
 	private MessageService msgService;
+	static int timeOut = 5000;	// 5 Sek bis Sende- Emfpangs-Versuch abgebrochen wird
 
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient() throws RemoteException, NotBoundException{
-		Registry registry = LocateRegistry.getRegistry("WOOD");
+		Registry registry = LocateRegistry.getRegistry("192.168.0.5");
 		msgService = (MessageService)registry.lookup("MessageService");
+		
+		
 	}
 
-	public void printServerMessage() throws RemoteException{
-
-		//sendet 4 Nachrichten an den Server
-		for(int i = 0; i < 4; i++){
-			msgService.newMessage("Client1", "voll tolle Nachricht " + i);
-		}
+	
+	public void sendMessage(String message){
+				
+		long stamp = new Date().getTime();
+		while (new Date().getTime() - stamp < timeOut){		
 		
-		//holt drei nachrichten vom Server
-		for(int i = 0; i < 3; i++){
-			String msg = msgService.nextMessage("Client1");
-			System.out.println("Message from Server:" + msg);
+			try {
+				msgService.newMessage("Client1", message);
+				System.out.println(message + " gesendet");
+				break;
+			} catch (RemoteException e) {
+				
+			}
 		}
-		
 	}
 	
-	public static void main(String[] args) {
-		try{
-			MessageServiceClient msgClient = new MessageServiceClient();
-			msgClient.printServerMessage();
-		}catch(NotBoundException e){
-			System.err.println("Couldn't find remote object in registry");
-			e.printStackTrace();
-		}catch(RemoteException e){
-			System.err.println("Error while Communicating with RMI-Server");
-			System.err.println();
+	public String getMessage(){
+		
+		long stamp = new Date().getTime();
+		String message = null;
+		
+		while (new Date().getTime() - stamp < timeOut){		
+		
+			try {
+				message = msgService.nextMessage("Client1");
+				break;
+			} catch (RemoteException e) {
+				
+			}
 		}
-
+		return message;
 	}
-
+	
 }
