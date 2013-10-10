@@ -35,7 +35,7 @@ public class MessageServiceClient implements Runnable{
 	private boolean running = false;
 
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
-	public MessageServiceClient(){
+	public MessageServiceClient(String serverHost){
 
 			try {
 				hostName = InetAddress.getLocalHost().getHostName();
@@ -50,7 +50,7 @@ public class MessageServiceClient implements Runnable{
 		
 			Registry registry;
 			try {
-				registry = LocateRegistry.getRegistry("141.22.87.238");
+				registry = LocateRegistry.getRegistry(serverHost);
 				msgService = (MessageService)registry.lookup("MessageService");
 				isConnected = true;
 				break;
