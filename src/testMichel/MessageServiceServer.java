@@ -10,12 +10,16 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.Policy;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.locks.*;
+
+import server.MessageService;
+
 
 public class MessageServiceServer extends UnicastRemoteObject implements MessageService {
 
@@ -40,7 +44,7 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		
 		mutex.lock();
 		
-		log.append("Client [" + clientID + "] Anforderung fuer Nachricht");
+		log.append("Client [" + clientID + "] Anfordwerung fuer Nachricht");
 	
 	    DeliveryRecord dr = deliveryRecords.get(clientID);
 	    Message msgToSend = null;
@@ -48,7 +52,7 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		if(dr != null){ //bereits eintrg fuer Client vorhanden vorhanden
 			if(new Date().getTime() - dr.getDeliveryTime().getTime() > waitingTime){ //DR loeschen falls Merkzeit ueberschritten
 				deliveryRecords.remove(clientID);
-				System.out.println("DEBUG: lösche deliveryRecord für client '" + clientID + "'");
+				System.out.println("DEBUG: lï¿½sche deliveryRecord fï¿½r client '" + clientID + "'");
 			}else{
 				
 				Iterator<Message> it = DeliveryQueue.iterator();
@@ -56,13 +60,13 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 				for( Message m : DeliveryQueue){
 					if(m.getMessageId() > dr.getMessage().getMessageId()){
 					    msgToSend = m;
-					    System.out.println("DEBUG: aktualisiere deliveryRecord für client '" + clientID + "'");
+					    System.out.println("DEBUG: aktualisiere deliveryRecord fï¿½r client '" + clientID + "'");
 					    deliveryRecords.remove(clientID);
 					    deliveryRecords.put(clientID, new DeliveryRecord(m));
 					    mutex.unlock();
 					    return m.getFormatedDeliveryMessage();
 					}else{
-						System.out.println("DEBUG: Bereits übertragen: " + m.getFormatedDeliveryMessage());
+						System.out.println("DEBUG: Bereits ï¿½bertragen: " + m.getFormatedDeliveryMessage());
 					}
 				}	
 				
@@ -77,12 +81,12 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		}
 				
 		if(msgToSend != null){ //..und versenden + DR erstellen..
-			System.out.println("DEBUG: erstelle deliveryRecord für client '" + clientID + "' Message[" + msgToSend.getMessageId() + "]");
+			System.out.println("DEBUG: erstelle deliveryRecord fï¿½r client '" + clientID + "' Message[" + msgToSend.getMessageId() + "]");
 			deliveryRecords.put(clientID, new DeliveryRecord(msgToSend));
 			mutex.unlock();
 			return msgToSend.getFormatedDeliveryMessage();
 		}else{ //..ausser es gibt auch keine Nachricht in der queue 
-			System.out.println("DEBUG: keine Nachricht für client '" + clientID + "'");
+			System.out.println("DEBUG: keine Nachricht fï¿½r client '" + clientID + "'");
 			mutex.unlock();
 			return null;			
 		}
@@ -114,6 +118,20 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		
 		try{
 			log = new Log();
+			
+
+			
+			System.setProperty("java.security.policy","allesErlaubt.policy");
+					
+			System.out.println(System.getProperty("java.security.policy"));
+			System.out.println(System.getProperty("user.dir"));
+			
+			if (System.getSecurityManager() == null) {
+			    System.setSecurityManager(new SecurityManager());
+			}
+			
+			
+			
 			MessageService msgService = new MessageServiceServer();
 			LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
 			registry = LocateRegistry.getRegistry();

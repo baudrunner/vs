@@ -1,0 +1,3 @@
+grant codeBase "file:///C:/Users/310115366/Desktop/Workspace/lab1/bin/" {
+	permission java.security.AllPermission;
+};

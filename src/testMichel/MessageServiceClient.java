@@ -8,6 +8,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Date;
 
+import server.MessageService;;
+
+
 public class MessageServiceClient implements Runnable{
 	
 	public class ConcurrentMessageGetter implements Runnable{
@@ -18,7 +21,7 @@ public class MessageServiceClient implements Runnable{
 			
 			try {
 				msg = MessageServiceClient.this.msgService.nextMessage(hostName);
-				System.out.println("Hurra thread: " + msg);
+				//System.out.println("Hurra thread: " + msg);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -37,13 +40,19 @@ public class MessageServiceClient implements Runnable{
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient(String serverHost){
 
-			try {
-				hostName = InetAddress.getLocalHost().getHostName();
-				System.out.println("HostName: " + hostName);
-			} catch (UnknownHostException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+		try {
+			hostName = InetAddress.getLocalHost().getHostName();
+			System.out.println("HostName: " + hostName);
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		System.setProperty("java.security.policy","allesErlaubt.policy");
+		
+		if (System.getSecurityManager() == null) {
+		    System.setSecurityManager(new SecurityManager());
+		}
 
 		long stamp = new Date().getTime();
 		while (new Date().getTime() - stamp < timeOut){
@@ -59,7 +68,7 @@ public class MessageServiceClient implements Runnable{
 				//e.printStackTrace();
 			} catch (RemoteException e) {
 				System.err.println("Server not found");
-				System.err.println();
+				e.printStackTrace();
 			}
 		}
 		//ClientGui.setConnected(true);
