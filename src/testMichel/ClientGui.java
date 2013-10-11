@@ -39,36 +39,6 @@ public class ClientGui {
 	private JLabel lblConnecting;
 	private MessageServiceClient client;
 	
-//	/**
-//	 * Launch the application.
-//	 * 
-//	 * @throws NotBoundException
-//	 * @throws RemoteException
-//	 */
-//	public static void main(String[] args) throws RemoteException,
-//			NotBoundException {
-//		
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//				try {
-//					ClientGui window = new ClientGui();
-//					window.frame.setVisible(true);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-//		
-//
-//
-//
-//		System.out.println("debug clientgui");
-//
-//		//ClientGui client = new ClientGui();
-//
-//
-//	}
-
 	/**
 	 * Create the application.
 	 */

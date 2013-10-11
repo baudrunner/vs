@@ -1,0 +1,2 @@
+Fri Oct 11 16:26:03 CEST 2013SERVER gestartet! Service als 'MessageService' in der RMI registry angemeldet
+Fri Oct 11 16:26:20 CEST 2013Client [DEPHBGCLS1NB0UM] Anfordwerung fuer Nachricht

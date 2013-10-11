@@ -13,36 +13,18 @@ import server.MessageService;;
 
 public class MessageServiceClient implements Runnable{
 	
-	public class ConcurrentMessageGetter implements Runnable{
-		
-		String msg = null;
-		@Override
-		public void run() {
-			
-			try {
-				msg = MessageServiceClient.this.msgService.nextMessage(hostName);
-				//System.out.println("Hurra thread: " + msg);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		public String getMessage(){ return msg;}
-	}
-	
 	private final String msgServiceName = "MessageService";
 	private MessageService msgService;
-	static int timeOut = 60000;	// 5 Sek bis Sende- Emfpangs-Versuch abgebrochen wird
+	static int timeOut = 5000;	// 5 Sek bis Sende- Emfpangs-Versuch abgebrochen wird
 	private String hostName;
 	private String serverHostName;
 	private boolean isConnected = false;
 	private boolean running = false;
 
-	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient(String serverHost){
 		
-		serverHostName = serverHost;
+		serverHostName = serverHost; // fuer spaetere verwendung (reconnect) zwischenspeichern
+		
 		try {
 			hostName = InetAddress.getLocalHost().getHostName();
 			System.out.println("HostName: " + hostName);
@@ -56,34 +38,24 @@ public class MessageServiceClient implements Runnable{
 		if (System.getSecurityManager() == null) {
 		    System.setSecurityManager(new SecurityManager());
 		}
-
+		
 		long stamp = new Date().getTime();
 		while (new Date().getTime() - stamp < timeOut){
 		
-			Registry registry;
-			try {
-				registry = LocateRegistry.getRegistry(serverHostName);
-				msgService = (MessageService)registry.lookup("MessageService");
-				isConnected = true;
-				break;
-			} catch (NotBoundException e) {
-				System.err.println("Couldn't find remote object in registry");
-				//e.printStackTrace();
-			} catch (RemoteException e) {
-				System.err.println("Server not found");
-				e.printStackTrace();
-			}
+			msgService = tryToGetMessageService(serverHostName,msgServiceName);
+			if(msgService != null){ isConnected = true; break; }
 		}
-		//ClientGui.setConnected(true);
-		
+				
 	}
 
 	
 	public void sendMessage(String message){
 				
 		long stamp = new Date().getTime();
+		//innerhalb des Zeitintervalls "timeOut" versuchen, eine Nachricht zu senden
+		//...falls dies Fehlschlaegt wird versucht die Verbindung erneut aufzubauen
+		//...falls dies auch fehlschlaegt ignorieren
 		while (new Date().getTime() - stamp < timeOut){		
-		
 			try {
 				msgService.newMessage(hostName, message);
 				System.out.println(message + " gesendet");
@@ -91,7 +63,12 @@ public class MessageServiceClient implements Runnable{
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				System.err.println("message-Send fehlgeschlagen!...");
+				msgService = tryToGetMessageService(serverHostName, msgServiceName);
+			} catch (NullPointerException e){
+				System.err.println("Letzter versuch den Server zu erreichen fehlgeschlagen -> versuche es erneut...");
+				msgService = tryToGetMessageService(serverHostName, msgServiceName);
 			}
+			
 		}
 	}
 	
@@ -100,19 +77,24 @@ public class MessageServiceClient implements Runnable{
 		long stamp = new Date().getTime();
 		String message = null;
 		
+		//innerhalb des Zeitintervalls "timeOut" versuchen, eine Nachricht abzuholen
+		//...falls dies Fehlschlaegt wird versucht die Verbindung erneut aufzubauen
+		//...falls dies auch fehlschlaegt wird null zurueckgegeben
 		while (new Date().getTime() - stamp < timeOut){		
-			
 			try {
-				message = MessageServiceClient.this.msgService.nextMessage(hostName);
+				message = msgService.nextMessage(hostName);
 				return message;
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				msgService = tryToGetMessageService(serverHostName, msgServiceName);
 			} catch (NullPointerException e){
-				System.err.println("Nullpointer -> versuche nochmal server zu erreichen...");
+				System.err.println("Letzter versuch den Server zu erreichen fehlgeschlagen -> versuche es erneut...");
 				msgService = tryToGetMessageService(serverHostName, msgServiceName);
 			}
+
+// Die Folgenden Auskommentierten Zeilen erlauben es auf Systemen bei denen der entfernte aufruf dauerhaft blockiert (aufgetreten bei Linux Mint 14) 
+// Den Aufruf in einem Thread zu versuchen, und diesen Versuch innerhalb einer konfigurierbaren Zeit abzubrechen
+			
 //			ConcurrentMessageGetter cmg = new ConcurrentMessageGetter();
 //			Thread getMsg = new Thread(cmg);
 //			getMsg.start();	
@@ -132,22 +114,17 @@ public class MessageServiceClient implements Runnable{
 		}
 		
 		System.err.println("ERROR: Server nicht erreichbar?");
-		
-		return message;
+		return null;
 	}
 	
 	public boolean isConnected(){
 		return isConnected;
 	}
 	
-
 	
-	//THREADKRAM  vv
-
+	//Thread Implementierung um Nachrichten nebenläufig abzuholen
 	public void run() {
-
-		while (running) {
-			
+		while (running) {		
 			String msg = getMessage();
 			
 			if(msg != null){
@@ -160,14 +137,24 @@ public class MessageServiceClient implements Runnable{
 					e.printStackTrace();
 				}
 			}
-			
 		}
 	}
 
+	/**
+	 * um von der Gui aus, das automatische Abholen der Nachrichten zu aktivieren
+	 * @param running
+	 */
 	public void setRunning(boolean running) {
 		this.running = running;
 	}
 	
+	
+	/**
+	 * versucht eine Referenz auf ein entferntes MessageService-Objekt vom Server zu holen
+	 * @param srvHost
+	 * @param serviceName
+	 * @return
+	 */
 	private MessageService tryToGetMessageService(String srvHost, String serviceName){
 		Registry registry;
 		MessageService msgServiceObj;
@@ -180,10 +167,33 @@ public class MessageServiceClient implements Runnable{
 			//e.printStackTrace();
 		} catch (RemoteException e) {
 			System.err.println("Server not found");
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return null;
 	}
+	
+	
+// auf manchen Systemen als workaround einsetzbar -> siehe getMessage() 
+//	/**
+//	 * einfaches Runnable, das erlaubt Messages Abzuholen
+//	 * @author Michel
+//	 *
+//	 */
+//	public class ConcurrentMessageGetter implements Runnable{
+//		
+//		String msg = null;
+//		@Override
+//		public void run() {
+//			try {
+//				msg = MessageServiceClient.this.msgService.nextMessage(hostName);
+//				//System.out.println("Hurra thread: " + msg);
+//			} catch (RemoteException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}	
+//		public String getMessage(){ return msg;}
+//	}
 		
 }

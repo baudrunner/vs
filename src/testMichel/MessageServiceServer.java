@@ -39,78 +39,7 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		super();
 	}
 
-	@Override
-	public String nextMessage(String clientID) throws RemoteException {
-		
-		mutex.lock();
-		
-		log.append("Client [" + clientID + "] Anfordwerung fuer Nachricht");
 	
-	    DeliveryRecord dr = deliveryRecords.get(clientID);
-	    Message msgToSend = null;
-	    	    
-		if(dr != null){ //bereits eintrg fuer Client vorhanden vorhanden
-			if(new Date().getTime() - dr.getDeliveryTime().getTime() > waitingTime){ //DR loeschen falls Merkzeit ueberschritten
-				deliveryRecords.remove(clientID);
-				System.out.println("DEBUG: l�sche deliveryRecord f�r client '" + clientID + "'");
-			}else{
-				
-				Iterator<Message> it = DeliveryQueue.iterator();
-				
-				for( Message m : DeliveryQueue){
-					if(m.getMessageId() > dr.getMessage().getMessageId()){
-					    msgToSend = m;
-					    System.out.println("DEBUG: aktualisiere deliveryRecord f�r client '" + clientID + "'");
-					    deliveryRecords.remove(clientID);
-					    deliveryRecords.put(clientID, new DeliveryRecord(m));
-					    mutex.unlock();
-					    return m.getFormatedDeliveryMessage();
-					}else{
-						System.out.println("DEBUG: Bereits �bertragen: " + m.getFormatedDeliveryMessage());
-					}
-				}	
-				
-				mutex.unlock();
-				return null;
-			}
-		} //..es muss also erst ein DR fuer diesen CLient angelegt werden
-		
-		
-		if(msgToSend == null){ //wenn keine Nachricht mittels DR gefunden...
-			msgToSend = DeliveryQueue.peek(); //..die aelteste aus der queue holen...
-		}
-				
-		if(msgToSend != null){ //..und versenden + DR erstellen..
-			System.out.println("DEBUG: erstelle deliveryRecord f�r client '" + clientID + "' Message[" + msgToSend.getMessageId() + "]");
-			deliveryRecords.put(clientID, new DeliveryRecord(msgToSend));
-			mutex.unlock();
-			return msgToSend.getFormatedDeliveryMessage();
-		}else{ //..ausser es gibt auch keine Nachricht in der queue 
-			System.out.println("DEBUG: keine Nachricht f�r client '" + clientID + "'");
-			mutex.unlock();
-			return null;			
-		}
-	}
-
-	@Override
-	public void newMessage(String clientID, String message) throws RemoteException {
-		
-		//Toolkit.getDefaultToolkit().beep();
-		mutex.lock();
-		
-		if(DeliveryQueue.size() >= fifoSize){
-			Message delmsg = DeliveryQueue.remove();
-			System.out.println("deleting Message: [ " + delmsg.getFormatedDeliveryMessage() + " ]");
-		}
-		Message m = new Message(clientID, message);
-		DeliveryQueue.add(m);
-		System.out.println("DEBUG: Message erhalten: " + m.getFormatedDeliveryMessage());
-		
-		mutex.unlock();
-		
-	}
-	
-
 	public static void main(String[] args) {
 		
 		String registryServiceName = "MessageService";
@@ -133,8 +62,8 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 			
 			
 			MessageService msgService = new MessageServiceServer();
-			LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
-			registry = LocateRegistry.getRegistry();
+			registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
+			//registry = LocateRegistry.getRegistry();
 			registry.rebind(registryServiceName, msgService);
 			System.out.println("Server \"" + registryServiceName + "\" initialisiert!");
 			log.append("SERVER gestartet! Service als '" + registryServiceName + "' in der RMI registry angemeldet");
@@ -164,5 +93,80 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 
 
 	}
+	
+	
+	@Override
+	public String nextMessage(String clientID) throws RemoteException {
+		
+		mutex.lock();
+		
+		log.append("Client [" + clientID + "] Anfordwerung fuer Nachricht");
+	
+	    DeliveryRecord dr = deliveryRecords.get(clientID);
+	    Message msgToSend = null;
+	    	    
+		if(dr != null){ //bereits eintrg fuer Client vorhanden vorhanden
+			if(new Date().getTime() - dr.getDeliveryTime().getTime() > waitingTime){ //DR loeschen falls Merkzeit ueberschritten
+				deliveryRecords.remove(clientID);
+				System.out.println("DEBUG: loesche deliveryRecord fuer client '" + clientID + "'");
+			}else{
+				
+				Iterator<Message> it = DeliveryQueue.iterator();
+				
+				for( Message m : DeliveryQueue){
+					if(m.getMessageId() > dr.getMessage().getMessageId()){
+					    msgToSend = m;
+					    System.out.println("DEBUG: aktualisiere deliveryRecord fuer client '" + clientID + "'");
+					    deliveryRecords.remove(clientID);
+					    deliveryRecords.put(clientID, new DeliveryRecord(m));
+					    mutex.unlock();
+					    return m.getFormatedDeliveryMessage();
+					}else{
+						System.out.println("DEBUG: Bereits uebertragen: " + m.getFormatedDeliveryMessage());
+					}
+				}	
+				
+				mutex.unlock();
+				return null;
+			}
+		} //..es muss also erst ein DR fuer diesen CLient angelegt werden
+		
+		
+		if(msgToSend == null){ //wenn keine Nachricht mittels DR gefunden...
+			msgToSend = DeliveryQueue.peek(); //..die aelteste aus der queue holen...
+		}
+				
+		if(msgToSend != null){ //..und versenden + DR erstellen..
+			System.out.println("DEBUG: erstelle deliveryRecord fuer client '" + clientID + "' Message[" + msgToSend.getMessageId() + "]");
+			deliveryRecords.put(clientID, new DeliveryRecord(msgToSend));
+			mutex.unlock();
+			return msgToSend.getFormatedDeliveryMessage();
+		}else{ //..ausser es gibt auch keine Nachricht in der queue 
+			System.out.println("DEBUG: keine Nachricht fuer client '" + clientID + "'");
+			mutex.unlock();
+			return null;			
+		}
+	}
+
+	@Override
+	public void newMessage(String clientID, String message) throws RemoteException {
+		
+		//Toolkit.getDefaultToolkit().beep();
+		mutex.lock();
+		
+		if(DeliveryQueue.size() >= fifoSize){
+			Message delmsg = DeliveryQueue.remove();
+			System.out.println("deleting Message: [ " + delmsg.getFormatedDeliveryMessage() + " ]");
+		}
+		Message m = new Message(clientID, message);
+		DeliveryQueue.add(m);
+		System.out.println("DEBUG: Message erhalten: " + m.getFormatedDeliveryMessage());
+		
+		mutex.unlock();
+		
+	}
+	
+
+
 
 }
