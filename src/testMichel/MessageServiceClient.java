@@ -31,15 +31,18 @@ public class MessageServiceClient implements Runnable{
 		public String getMessage(){ return msg;}
 	}
 	
+	private final String msgServiceName = "MessageService";
 	private MessageService msgService;
-	static int timeOut = 5000;	// 5 Sek bis Sende- Emfpangs-Versuch abgebrochen wird
+	static int timeOut = 60000;	// 5 Sek bis Sende- Emfpangs-Versuch abgebrochen wird
 	private String hostName;
+	private String serverHostName;
 	private boolean isConnected = false;
 	private boolean running = false;
 
 	//sucht in der RMI Registry nach der "MessageService"-Instanz
 	public MessageServiceClient(String serverHost){
-
+		
+		serverHostName = serverHost;
 		try {
 			hostName = InetAddress.getLocalHost().getHostName();
 			System.out.println("HostName: " + hostName);
@@ -59,7 +62,7 @@ public class MessageServiceClient implements Runnable{
 		
 			Registry registry;
 			try {
-				registry = LocateRegistry.getRegistry(serverHost);
+				registry = LocateRegistry.getRegistry(serverHostName);
 				msgService = (MessageService)registry.lookup("MessageService");
 				isConnected = true;
 				break;
@@ -86,7 +89,8 @@ public class MessageServiceClient implements Runnable{
 				System.out.println(message + " gesendet");
 				break;
 			} catch (RemoteException e) {
-				
+				e.printStackTrace();
+				System.err.println("message-Send fehlgeschlagen!...");
 			}
 		}
 	}
@@ -97,21 +101,33 @@ public class MessageServiceClient implements Runnable{
 		String message = null;
 		
 		while (new Date().getTime() - stamp < timeOut){		
-			ConcurrentMessageGetter cmg = new ConcurrentMessageGetter();
-			Thread getMsg = new Thread(cmg);
-			getMsg.start();	
 			
 			try {
-				getMsg.join(1000L);
-				if(getMsg.isAlive()){
-					getMsg.interrupt();
-				}else{
-					return cmg.getMessage();
-				}
-			} catch (InterruptedException e) {
+				message = MessageServiceClient.this.msgService.nextMessage(hostName);
+				return message;
+			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				msgService = tryToGetMessageService(serverHostName, msgServiceName);
+			} catch (NullPointerException e){
+				System.err.println("Nullpointer -> versuche nochmal server zu erreichen...");
+				msgService = tryToGetMessageService(serverHostName, msgServiceName);
 			}
+//			ConcurrentMessageGetter cmg = new ConcurrentMessageGetter();
+//			Thread getMsg = new Thread(cmg);
+//			getMsg.start();	
+//			
+//			try {
+//				getMsg.join(1000L);
+//				if(getMsg.isAlive()){
+//					getMsg.interrupt();
+//				}else{
+//					return cmg.getMessage();
+//				}
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			
 		}
 		
@@ -150,6 +166,24 @@ public class MessageServiceClient implements Runnable{
 
 	public void setRunning(boolean running) {
 		this.running = running;
+	}
+	
+	private MessageService tryToGetMessageService(String srvHost, String serviceName){
+		Registry registry;
+		MessageService msgServiceObj;
+		try {
+			registry = LocateRegistry.getRegistry(srvHost);
+			msgServiceObj = (MessageService)registry.lookup(serviceName);
+			return msgServiceObj;
+		} catch (NotBoundException e) {
+			System.err.println("Couldn't find remote object in registry");
+			//e.printStackTrace();
+		} catch (RemoteException e) {
+			System.err.println("Server not found");
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 		
 }
