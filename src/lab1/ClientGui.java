@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 import java.awt.EventQueue;
 

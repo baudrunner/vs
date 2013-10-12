@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 public class AutoGetMessage implements Runnable {
 

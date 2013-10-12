@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

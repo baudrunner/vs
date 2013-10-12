@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -22,7 +22,7 @@ public class Log {
 	       // Text wird in den Stream geschrieben
 	       writer.write(new Date() + txt);
 	       
-	       // Platformunabhängiger Zeilenumbruch
+	       // Platformunabhï¿½ngiger Zeilenumbruch
 	       writer.write(System.getProperty("line.separator"));
    
 	       writer.flush();

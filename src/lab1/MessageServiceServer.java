@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 import java.awt.Toolkit;
 import java.io.BufferedReader;
@@ -66,7 +66,7 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 			//registry = LocateRegistry.getRegistry();
 			registry.rebind(registryServiceName, msgService);
 			System.out.println("Server \"" + registryServiceName + "\" initialisiert!");
-			log.append("SERVER gestartet! Service als '" + registryServiceName + "' in der RMI registry angemeldet");
+			log.append(" SERVER gestartet! Service als '" + registryServiceName + "' in der RMI registry angemeldet");
 			
 			
 			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -79,6 +79,8 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 			registry.unbind(registryServiceName);
 			UnicastRemoteObject.unexportObject(msgService,true); 
 			System.out.println("unbound: " + registryServiceName );
+			log.append(" SERVER angehalten! in der RMI registry abgemeldet");
+
 			
 		}catch(RemoteException e){
 			System.err.println("Fehler bei Initialisierung des Servers:");
@@ -100,7 +102,7 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		
 		mutex.lock();
 		
-		log.append("Client [" + clientID + "] Anfordwerung fuer Nachricht");
+		log.append(" Client [" + clientID + "] Anforderung fuer Nachricht");
 	
 	    DeliveryRecord dr = deliveryRecords.get(clientID);
 	    Message msgToSend = null;
@@ -154,6 +156,8 @@ public class MessageServiceServer extends UnicastRemoteObject implements Message
 		//Toolkit.getDefaultToolkit().beep();
 		mutex.lock();
 		
+		log.append(" Nachricht von Client [" + clientID + "] empfangen");
+
 		if(DeliveryQueue.size() >= fifoSize){
 			Message delmsg = DeliveryQueue.remove();
 			System.out.println("deleting Message: [ " + delmsg.getFormatedDeliveryMessage() + " ]");

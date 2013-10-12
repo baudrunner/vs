@@ -1,4 +1,4 @@
-package testMichel;
+package lab1;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -122,7 +122,7 @@ public class MessageServiceClient implements Runnable{
 	}
 	
 	
-	//Thread Implementierung um Nachrichten nebenläufig abzuholen
+	//Thread Implementierung um Nachrichten nebenlï¿½ufig abzuholen
 	public void run() {
 		while (running) {		
 			String msg = getMessage();
